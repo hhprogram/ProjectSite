@@ -1,0 +1,23 @@
+{
+  "name": "projects",
+  "version": "1.0.0",
+  "description": "personal website to showcase projects",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hhprogram/ProjectSite.git"
+  },
+  "author": "hhprogram",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/hhprogram/ProjectSite/issues"
+  },
+  "homepage": "https://github.com/hhprogram/ProjectSite#readme",
+  "dependencies": {
+    "ejs": "^2.5.8",
+    "express": "^4.16.3"
+  }
+}
