@@ -8,6 +8,8 @@ var app = express();
 // if specific file not given
 var indexRoutes = require("./routes")
 var whaleRoutes = require("./routes/Whale")
+var patatapRoutes = require("./routes/Patatap")
+var blogRoutes = require("./routes/Blog")
 
 
 // tells express that the templates are all ejs so you don't have to add .ejs to all templates
@@ -26,6 +28,8 @@ app.use("/", indexRoutes)
 // this tells express to use variable INDEXROUTES whenever the url "/" is pinged, therefore every route
 // within the index.js file has "/WhaleGame" prepended to it
 app.use("/WhaleGame", whaleRoutes)
+app.use("/Blog", blogRoutes)
+app.use("/Patatap", patatapRoutes)
 
 app.listen(process.env.PORT, process.env.IP, function(){
    console.log("The project site server Has Started!");
