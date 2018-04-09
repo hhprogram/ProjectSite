@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/hhprogram/ProjectSite#readme",
   "dependencies": {
+    "amqplib": "^0.5.2",
     "ejs": "^2.5.8",
     "express": "^4.16.3"
   }
