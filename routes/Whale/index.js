@@ -10,25 +10,8 @@ router.get("/", function(req, res) {
     res.render("Whale/home")
 });
 
-// route to retrieve the data that the python test script returns
-router.get("/testPython", connectToPython);
 
-// function that is called when we hit the route above
-function connectToPython(req, res) {
-    var inputs = []
-    amqb.connect('amqb://localhost', function(err, conn) {
-    conn.createChannel(function(err, channel) {
-        channel.assertQueue(q=resultsQueue, {Durable:true});
-        console.log("Waiting for messages in the %s queue", resultsQueue)
-        channel.consume(q, 
-                        function(msg) {
-                            console.log("Received %s in %s queue", msg.content.toString(), resultsQueue) 
-                        }, 
-                        noAck=false); 
-        });
-    });
-});
 
 // note: need to remember to do this or else will get an error. For eaxxmple the use()
 // function in app.js that uses this file will throw an error
-module.exports = router
+module.exports = router;

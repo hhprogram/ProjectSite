@@ -2,7 +2,8 @@ var express = require("express");
             
 
 var app = express();
-// looks in the current directory where app.js lives ('./') and then looks in the 'routes' directory
+// looks in the current directory where app.js lives ('./') - which is the "ProjectSite" directory 
+// and then looks in the 'routes' directory
 // also note that we don't have to notify specifically to require /routes/index.js because by 
 // default express will automatically find and required the index.js file within the 'routes' directory
 // if specific file not given
@@ -10,7 +11,7 @@ var indexRoutes = require("./routes")
 var whaleRoutes = require("./routes/Whale")
 var patatapRoutes = require("./routes/Patatap")
 var blogRoutes = require("./routes/Blog")
-
+var pythonRoutes = require("./routes/PythonTest")
 
 // tells express that the templates are all ejs so you don't have to add .ejs to all templates
 app.set("view engine", "ejs");
@@ -30,6 +31,7 @@ app.use("/", indexRoutes)
 app.use("/WhaleGame", whaleRoutes)
 app.use("/Blog", blogRoutes)
 app.use("/Patatap", patatapRoutes)
+app.use("/PythonTest", pythonRoutes)
 
 app.listen(process.env.PORT, process.env.IP, function(){
    console.log("The project site server Has Started!");
