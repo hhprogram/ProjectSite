@@ -7,7 +7,7 @@ task_queue = "task_queue"
 results_queue = "results"
 # see: http://www.rabbitmq.com/tutorials/tutorial-one-python.html
 
-connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+connection = pika.BlockingConnection(pika.ConnectionParameters(host='webdev-bootcamp-hhprogram.c9users.io'))
 channel = connection.channel()
 
 # connecting to the queue that will be used by python and Node.js to communicate

@@ -1,8 +1,13 @@
 <% include ../partials/header %>
 
-<label for="arg1">Enter a number: </label>
-<form type="number" id="arg1" name="arg1"></form>
-<label for="arg2" name="arg2">Enter another number: </label>
-<form type="number" id="arg2"></form>
+<form action="/PythonTest" method="POST">
+    <label for="arg1">Enter a number: </label>
+    <input type="number" id="arg1" name="arg1"></input>
+    <label for="arg2" name="arg2">Enter another number: </label>
+    <input type="number" id="arg2" name="arg2"></input>
+    <div class="form-group">
+        <button class="btn btn-lg btn-primary btn-block">Submit!</button>
+    </div>
+</form>
 
 <% include ../partials/footer %>
