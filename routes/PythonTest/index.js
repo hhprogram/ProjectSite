@@ -1,15 +1,18 @@
 var express = require("express");
 var router = express.Router();
-var amqb = require("amqplib/callback_api");
+var amqp = require("amqplib/callback_api");
+var spawn = require("child_process").spawn;
+var pythonProcess = spawn("python", ["./pythonScripts/messaging.py"]);
 // NOTE: remember need to require body parser and then use it or else cannot easily access
 // the request body and other parameters of the request object so easily with dot notation.
 var bodyparser = require("body-parser");
 router.use(bodyparser.urlencoded({extended: true}));
 
 // see: http://www.rabbitmq.com/tutorials/tutorial-two-python.html
+// see: https://medium.com/@HolmesLaurence/integrating-node-and-python-6b8454bfc272
 
 var resultsQueue = "results";
-var taskQueue = "taskQueue";
+var taskQueue = "task_queue";
 
 // note: I don't have to put "/PythonTest" in front of each of these URLs. because 
 // in my app.js file. I have told Express that everything in this file
@@ -35,27 +38,29 @@ function connectToPython(req, res) {
     var arg1 = req.body.arg1;
     var arg2 = req.body.arg2;
     var inputs = [arg1, arg2];
-    amqb.connect('amqp://webdev-bootcamp-hhprogram.c9users.io', function(err, conn) {
+    amqp.connect('amqp://webdev-bootcamp-hhprogram.c9users.io', function(err, conn) {
         conn.createChannel(function(err, channel) {
-        // note: I'm creating the task queue first and sending it to that queue 
-        // before the results queue as it makes sense to get the task going first
-        // that the results queue depends on 
-        // create the task queue that is shared by the python file as we don't know which file 
-        // will create it first. Therefore, need to ensure it exists
-        channel.assertQueue(q=taskQueue, {Durable:true});
-        // actually send the inputs entered in the form to the task queue so that python 
-        // can handle them and do its task
-        channel.sendToQueue(q=taskQueue, new Buffer(JSON.stringify(inputs)));
-        channel.assertQueue(q=resultsQueue, {Durable:true});
-        console.log("Waiting for messages in the %s queue", resultsQueue);
-        channel.consume(q, 
-                        function(msg) {
-                            console.log("Received %s in %s queue", msg.content.toString(), resultsQueue);
-                        }, 
-                        noAck=false);
+            console.log("creating channel")
+            // note: I'm creating the task queue first and sending it to that queue 
+            // before the results queue as it makes sense to get the task going first
+            // that the results queue depends on 
+            // create the task queue that is shared by the python file as we don't know which file 
+            // will create it first. Therefore, need to ensure it exists
+            channel.assertQueue(q=taskQueue, {Durable:true});
+            // actually send the inputs entered in the form to the task queue so that python 
+            // can handle them and do its task
+            channel.sendToQueue(q=taskQueue, new Buffer(JSON.stringify(inputs)));
+            channel.assertQueue(q=resultsQueue, {Durable:true});
+            console.log("Waiting for messages in the %s queue", resultsQueue);
+            channel.consume(resultsQueue, 
+                            function(msg) {
+                                console.log("Received %s in %s queue", msg.content.toString(), resultsQueue);
+                            }, 
+                            noAck=false);
 
         });
     });
+    console.log("Channel supposedly connected");
 };
 
 module.exports = router;
