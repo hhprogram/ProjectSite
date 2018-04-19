@@ -1,9 +1,34 @@
 var amqp = require('amqplib/callback_api');
+var connectionObject = {
+                          protocol: 'amqp',
+                          hostname: 'webdev-bootcamp-hhprogram.c9users.io',
+                          port: 8080,
+                          username: 'hhprogram',
+                          password: 'password',
+                          locale: 'en_US',
+                          frameMax: 0,
+                          heartbeat: 0,
+                          vhost: '/',
+                        };
+                        
+function bail(err, conn) {
+  console.log(err)
+  console.log(conn)
+  console.log("ERROR!")
+};
 
-console.log("in send")
-amqp.connect('amqp://webdev-bootcamp-hhprogram.c9users.io/', function(err, conn) {
+function bail2(err, conn) {
+  console.log(err)
+  console.log(conn)
+  console.log("ERROR2!")
+};
+
+console.log("in send");
+amqp.connect(connectionObject, function(err, conn) {
+  if (err !== null) return bail(err, conn);
   console.log("Connected in receive")
   conn.createChannel(function(err, ch) {
+    if (err !== null) return bail2(err, conn);
     var q = 'hello';
     var msg = 'Hello World!';
     console.log("channel created")
