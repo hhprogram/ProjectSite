@@ -33,6 +33,9 @@ app.use("/Blog", blogRoutes)
 app.use("/Patatap", patatapRoutes)
 app.use("/PythonTest", pythonRoutes)
 
-app.listen(process.env.PORT, process.env.IP, function(){
-   console.log("The project site server Has Started!");
+// NOTE: changed for the locally run version of the app. Put in the port and took out the IP argument as 
+// no longer need as if left blank just runs in localhost
+port = 3000
+app.listen(port, function(){
+   console.log("The project site server Has Started! It's on port " + port);
 });

@@ -1,15 +1,17 @@
 var amqp = require('amqplib/callback_api');
 
+// note: this assumes that I have set up in the RabbitMQ management plugin hhprogram as a user and their password being
+// mypassword AND I have given this user permission to the virtualhost called 'virtual' If not will give connection error
 var connectionObject = {
                           protocol: 'amqp',
-                          hostname: 'webdev-bootcamp-hhprogram.c9users.io',
-                          port: 8080,
+                          hostname: 'localhost',
+                          port: 5672,
                           username: 'hhprogram',
-                          password: 'password',
+                          password: 'mypassword',
                           locale: 'en_US',
                           frameMax: 0,
                           heartbeat: 0,
-                          vhost: '/',
+                          vhost: 'virtual', //note: this has to be exactly as the vhost is shown in the rabbitMQ management console.
                         }
                         
 function bail(err, conn) {
