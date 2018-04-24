@@ -1,14 +1,23 @@
 import pika
 import sys
 import whaleClassifier
+import json
 
 def main():
     
     task_queue = "task_queue"
     results_queue = "results"
     # see: http://www.rabbitmq.com/tutorials/tutorial-one-python.html
-    
-    connection = pika.BlockingConnection(pika.ConnectionParameters(host='webdev-bootcamp-hhprogram.c9users.io'))
+    print("launching Python messaging script")
+    credentials = pika.PlainCredentials("hhprogram", "mypassword")
+    virtual_host = "virtual"
+    # NOTE: if you leave credentials argument blank it defaults to username: guest, password: guest
+    # NOTE: if you leave the port argument blank defaults to 5672
+    # NOTE: if you leave virtual host argument blank it defaults to "/"
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost', 
+                                                                   credentials=credentials,
+                                                                   virtual_host="virtual",
+                                                                   port=5672))
     channel = connection.channel()
     
     # connecting to the queue that will be used by python and Node.js to communicate
@@ -30,15 +39,21 @@ def main():
         """callback method called when consumer finds some new task in the queue to be executed
         this is called. And this won't return anything but at the end of this method we will
         publish our result that we calculated from another python task to the 'results' queue
-        that our JS script will be listening to"""
-        result = whaleClassifier.test(10,20)
+        that our JS script will be listening to
+        body: object where the stringified data lives when passed through the queue. In our application we stringified
+        a list of inputs. those request params will be a list with the value of each of these inputs"""
+        requestParams = json.loads(body.decode('utf-8'))
+        print("inside the callback")
+        arg1 = int(requestParams[0])
+        arg2 = int(requestParams[1])
+        result = whaleClassifier.test(arg1, arg2)
         # what this does it publish the RESULT to the exchange (as producers of content 
         # cannot send stuff directly to queues, they send to exchanges and then exchanges 
         # send to queues. Note Exchange='' is default exchange which then sends to the
         # queue that is listed on the ROUTING_KEY argument.)
         channel.basic_publish(exchange='', 
                               routing_key=results_queue, 
-                              body=result,
+                              body=json.dumps(result),
                               properties=pika.BasicProperties(
                               delivery_mode = 2, # make message persistent
                              ))

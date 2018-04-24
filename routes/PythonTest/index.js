@@ -2,17 +2,32 @@ var express = require("express");
 var router = express.Router();
 var amqp = require("amqplib/callback_api");
 var spawn = require("child_process").spawn;
-var pythonProcess = spawn("python", ["./pythonScripts/messaging.py"]);
 // NOTE: remember need to require body parser and then use it or else cannot easily access
 // the request body and other parameters of the request object so easily with dot notation.
 var bodyparser = require("body-parser");
 router.use(bodyparser.urlencoded({extended: true}));
+
+// note: this assumes that I have set up in the RabbitMQ management plugin hhprogram as a user and their password being
+// mypassword AND I have given this user permission to the virtualhost called 'virtual'. If not will give connection error
+var connectionObject = {
+                          protocol: 'amqp',
+                          hostname: 'localhost',
+                          port: 5672,
+                          username: 'hhprogram',
+                          password: 'mypassword',
+                          locale: 'en_US',
+                          frameMax: 0,
+                          heartbeat: 0,
+                          vhost: 'virtual', //note: this has to be exactly as the vhost is shown in the rabbitMQ management console.
+                        };
 
 // see: http://www.rabbitmq.com/tutorials/tutorial-two-python.html
 // see: https://medium.com/@HolmesLaurence/integrating-node-and-python-6b8454bfc272
 
 var resultsQueue = "results";
 var taskQueue = "task_queue";
+// required in order to run python script so python can start listening to the task queue
+var spawn = require("child_process").spawn;
 
 // note: I don't have to put "/PythonTest" in front of each of these URLs. because 
 // in my app.js file. I have told Express that everything in this file
@@ -34,11 +49,12 @@ router.post("/", connectToPython);
 // the python script and then returns the value returned by the corresponding
 // python script
 function connectToPython(req, res) {
+    // var pythonProcess = spawn("python", ["./pythonScripts/messaging.py"]);
     console.log("Hello - in the post method")
     var arg1 = req.body.arg1;
     var arg2 = req.body.arg2;
     var inputs = [arg1, arg2];
-    amqp.connect('amqp://webdev-bootcamp-hhprogram.c9users.io', function(err, conn) {
+    amqp.connect(connectionObject, function(err, conn) {
         conn.createChannel(function(err, channel) {
             console.log("creating channel")
             // note: I'm creating the task queue first and sending it to that queue 
@@ -50,6 +66,7 @@ function connectToPython(req, res) {
             // actually send the inputs entered in the form to the task queue so that python 
             // can handle them and do its task
             channel.sendToQueue(q=taskQueue, new Buffer(JSON.stringify(inputs)));
+            console.log("Sent over:", inputs)
             channel.assertQueue(q=resultsQueue, {Durable:true});
             console.log("Waiting for messages in the %s queue", resultsQueue);
             channel.consume(resultsQueue, 
