@@ -69,9 +69,15 @@ function connectToPython(req, res) {
             console.log("Sent over:", inputs)
             channel.assertQueue(q=resultsQueue, {Durable:true});
             console.log("Waiting for messages in the %s queue", resultsQueue);
+            // NOTE: the argument in the ack() method most be the same argument passed into the function that we anonymously defined
+            // as the second argument in the consume() function. This is because this is how rabbitMQ knows which message within the queue
+            // has been process and consumed and thus can acknowledge that it is done and is free to delete it
             channel.consume(resultsQueue, 
                             function(msg) {
-                                console.log("Received %s in %s queue", msg.content.toString(), resultsQueue);
+                                var result = msg.content.toString();
+                                console.log("Received %s in %s queue", result, resultsQueue);
+                                console.log("This is the sum of the 2 numbers: %s", result);
+                                channel.ack(msg)
                             }, 
                             noAck=false);
 

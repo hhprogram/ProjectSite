@@ -57,6 +57,7 @@ def main():
                               properties=pika.BasicProperties(
                               delivery_mode = 2, # make message persistent
                              ))
+        channel.basic_ack(delivery_tag=method.delivery_tag)
         
     
     # note: by default we send back message acknowledgements when tasks are consumed
