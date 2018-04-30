@@ -1,7 +1,12 @@
 var express = require("express");
 var router = express.Router();
 var amqp = require("amqplib/callback_api");
-var spawn = require("child_process").spawn;
+// NOTE: need the below to be able to access variables in the .env.default file like process.WHATEVER_KEY_NAME_ENV_FILE
+// needed to pass in a JS object with key name path and then the path to the .env.default file I had created. I moved it
+// to the home directory of the PythonTest subfolder
+require("dotenv").config({path: __dirname + '/.env.default'});
+// required in order to run python script so python can start listening to the task queue
+const spawn = require("child_process").spawn;
 // NOTE: remember need to require body parser and then use it or else cannot easily access
 // the request body and other parameters of the request object so easily with dot notation.
 var bodyparser = require("body-parser");
@@ -26,8 +31,6 @@ var connectionObject = {
 
 var resultsQueue = "results";
 var taskQueue = "task_queue";
-// required in order to run python script so python can start listening to the task queue
-var spawn = require("child_process").spawn;
 
 // note: I don't have to put "/PythonTest" in front of each of these URLs. because 
 // in my app.js file. I have told Express that everything in this file
@@ -49,7 +52,8 @@ router.post("/", connectToPython);
 // the python script and then returns the value returned by the corresponding
 // python script
 function connectToPython(req, res) {
-    // var pythonProcess = spawn("python", ["./pythonScripts/messaging.py"]);
+    console.log("this is the python path being used: " + process.env.PYTHON);
+    var pythonProcess = spawn(process.env.PYTHON, ["./pythonScripts/messaging.py"]);
     console.log("Hello - in the post method")
     var arg1 = req.body.arg1;
     var arg2 = req.body.arg2;
@@ -71,13 +75,15 @@ function connectToPython(req, res) {
             console.log("Waiting for messages in the %s queue", resultsQueue);
             // NOTE: the argument in the ack() method most be the same argument passed into the function that we anonymously defined
             // as the second argument in the consume() function. This is because this is how rabbitMQ knows which message within the queue
-            // has been process and consumed and thus can acknowledge that it is done and is free to delete it
+            // has been process and consumed and thus can acknowledge that it is done and is free to delete it. Without this ACK() line 
+            // everytime i started up my server the tasks from previous runs were still sitting in the queue and thus consumed again after
+            // the first time of each server run, which is not the behavior we wanted. So channel.ack(msg) is required
             channel.consume(resultsQueue, 
                             function(msg) {
                                 var result = msg.content.toString();
                                 console.log("Received %s in %s queue", result, resultsQueue);
                                 console.log("This is the sum of the 2 numbers: %s", result);
-                                channel.ack(msg)
+                                channel.ack(msg) 
                             }, 
                             noAck=false);
 

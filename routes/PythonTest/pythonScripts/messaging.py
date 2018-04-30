@@ -57,7 +57,8 @@ def main():
                               properties=pika.BasicProperties(
                               delivery_mode = 2, # make message persistent
                              ))
-        channel.basic_ack(delivery_tag=method.delivery_tag)
+        channel.basic_ack(delivery_tag=method.delivery_tag) #need this line so that we don't resend this same message again the next time
+        # we start up this script. Which eventually clogs up memory
         
     
     # note: by default we send back message acknowledgements when tasks are consumed
