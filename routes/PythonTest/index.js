@@ -6,7 +6,7 @@ var amqp = require("amqplib/callback_api");
 // to the home directory of the PythonTest subfolder
 require("dotenv").config({path: __dirname + '/.env.default'});
 // required in order to run python script so python can start listening to the task queue
-const spawn = require("child_process").spawn;
+var spawn = require("child_process").spawn;
 // NOTE: remember need to require body parser and then use it or else cannot easily access
 // the request body and other parameters of the request object so easily with dot notation.
 var bodyparser = require("body-parser");
@@ -32,13 +32,15 @@ var connectionObject = {
 var resultsQueue = "results";
 var taskQueue = "task_queue";
 
+
+
 // note: I don't have to put "/PythonTest" in front of each of these URLs. because 
 // in my app.js file. I have told Express that everything in this file
 // should have the path /PythonTest prepended to it
 // handler - the landing page for this route will just be the input form as well
 router.get("/", function(req, res) {
     // note: that I don't have to put .. in the path in the 'render' argument because by default express prepends 'views' directory for all template paths
-    res.render("PythonTest/home");
+    res.render("PythonTest/home", {result: ""});
 });
 
 // route to send the data from the input form from "/". Doing this to 
@@ -52,9 +54,26 @@ router.post("/", connectToPython);
 // the python script and then returns the value returned by the corresponding
 // python script
 function connectToPython(req, res) {
-    console.log("this is the python path being used: " + process.env.PYTHON);
-    var pythonProcess = spawn(process.env.PYTHON, ["./pythonScripts/messaging.py"]);
     console.log("Hello - in the post method")
+    console.log("this is the python path being used: " + process.env.PYTHON);
+
+    // the below method takes in a command - which in our case is the absolute path string to the 'python' executable command
+    // then it takes a list of arguments. The first being the python file to execute and then we would list that python file's
+    // corresponding arguments if necessary
+    // var pythonProcess = spawn(process.env.PYTHON, ["./pythonScripts/messaging.py"]); //->doesn't seem to work, think either relative path doesn't work in general or this is incorrect
+    var pythonProcess = spawn(process.env.PYTHON, [process.env.MESSAGING]); //NOTE: had to use the absolute path to messaging.py for it to work
+    pythonProcess.on('error', function(code, signal) {
+        console.log("Error on spawing:", "code:", code, "signal:", signal)
+    });
+    pythonProcess.on('exit', function(code, signal) {
+        console.log("Exited spawing:", "code:", code, "signal:", signal)
+    });
+    pythonProcess.on('close', function(code, signal) {
+        console.log("Closed spawing:", "code:", code, "signal:", signal)
+    });
+    pythonProcess.stdout.on('data', function(data) {
+        console.log(data.toString());
+    });
     var arg1 = req.body.arg1;
     var arg2 = req.body.arg2;
     var inputs = [arg1, arg2];
@@ -83,7 +102,8 @@ function connectToPython(req, res) {
                                 var result = msg.content.toString();
                                 console.log("Received %s in %s queue", result, resultsQueue);
                                 console.log("This is the sum of the 2 numbers: %s", result);
-                                channel.ack(msg) 
+                                channel.ack(msg)
+                                // res.send({"result": result}) 
                             }, 
                             noAck=false);
 
@@ -93,30 +113,4 @@ function connectToPython(req, res) {
 };
 
 module.exports = router;
-
-// var amqp = require(‘amqplib/callback_api’);
-// app.get(‘/dalembert’, callD_alembert);
-// function callD_alembert3(req, res) {
-//   var input = [
-//     req.query.funds, // starting funds
-//     req.query.size, // (initial) wager size
-//     req.query.count, // wager count — number of wagers per sim
-//     req.query.sims // number of simulations
-//   ]
-//   amqp.connect(‘amqp://localhost’, function (err, conn) {
-//     conn.createChannel(function (err, ch) {
-//       var simulations = ‘simulations’;
-//       ch.assertQueue(simulations, { durable: false });
-//       var results = ‘results’;
-//       ch.assertQueue(results, { durable: false });
-//       ch.sendToQueue(simulations, new Buffer(JSON.stringify(input)));
-//       ch.consume(results, function (msg) {
-//         res.send(msg.content.toString())
-//       }, { noAck: true });
-//     });
-//     setTimeout(function () { conn.close(); }, 500); 
-//     });
-// }
-
-
 
